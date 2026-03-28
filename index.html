@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Fundamental Analyzer - Free Stock Analysis Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #ffffff;
+            --color-bg-secondary: #f8f8f8;
+            --color-bg-tertiary: #f0f0f0;
+            --color-bg-success: #d4edda;
+            --color-bg-info: #d1ecf1;
+            --color-bg-warning: #fff3cd;
+            --color-bg-danger: #f8d7da;
+            
+            --color-text-primary: #1a1a1a;
+            --color-text-secondary: #666666;
+            --color-text-tertiary: #999999;
+            --color-text-success: #155724;
+            --color-text-info: #0c5460;
+            --color-text-warning: #856404;
+            --color-text-danger: #721c24;
+            
+            --color-border-tertiary: rgba(0, 0, 0, 0.15);
+            --color-border-secondary: rgba(0, 0, 0, 0.3);
+            --color-border-primary: rgba(0, 0, 0, 0.4);
+            
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-bg-primary: #1a1a1a;
+                --color-bg-secondary: #2d2d2d;
+                --color-bg-tertiary: #3d3d3d;
+                --color-bg-success: #1e4620;
+                --color-bg-info: #0a3d52;
+                --color-bg-warning: #5f4a1e;
+                --color-bg-danger: #5a2329;
+                
+                --color-text-primary: #ffffff;
+                --color-text-secondary: #b0b0b0;
+                --color-text-tertiary: #808080;
+                --color-text-success: #90ee90;
+                --color-text-info: #87ceeb;
+                --color-text-warning: #ffd700;
+                --color-text-danger: #ff9999;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--color-bg-tertiary);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            background: var(--color-bg-primary);
+            border-bottom: 1px solid var(--color-border-tertiary);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-bg-primary);
+            padding: 1rem 1.5rem;
+            margin: -2rem -1.5rem 2rem -1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--color-text-primary);
+            border-bottom-color: #378add;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"] {
+            padding-right: 35px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #378add;
+            background: var(--color-bg-primary);
+        }
+
+        .unit-label {
+            position: absolute;
+            right: 12px;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            pointer-events: none;
+            font-weight: 600;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: var(--color-text-tertiary);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 2rem;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--color-bg-tertiary);
+        }
+
+        button.primary {
+            background: #378add;
+            color: white;
+            border-color: #378add;
+            flex: 2;
+        }
+
+        button.primary:hover {
+            background: #2668c5;
+        }
+
+        button.secondary {
+            flex: 1;
+        }
+
+        .results-container {
+            margin-top: 2rem;
+        }
+
+        .score-banner {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 2rem;
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .score-excellent {
+            background: #28a745;
+        }
+
+        .score-good {
+            background: #378add;
+        }
+
+        .score-fair {
+            background: #ffc107;
+            color: var(--color-text-primary);
+        }
+
+        .score-poor {
+            background: #dc3545;
+        }
+
+        .banner-text h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--color-text-primary);
+        }
+
+        .banner-text p {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+
+        .recommendation-badge {
+            padding: 12px 20px;
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            color: white;
+        }
+
+        .badge-strong-buy {
+            background: #28a745;
+        }
+
+        .badge-buy {
+            background: #378add;
+        }
+
+        .badge-hold {
+            background: #ffc107;
+            color: var(--color-text-primary);
+        }
+
+        .badge-weak-sell {
+            background: #ff9800;
+        }
+
+        .badge-sell {
+            background: #dc3545;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.25rem;
+        }
+
+        .metric-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-badge {
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .badge-e {
+            background: var(--color-bg-success);
+            color: var(--color-text-success);
+        }
+
+        .badge-g {
+            background: var(--color-bg-info);
+            color: var(--color-text-info);
+        }
+
+        .badge-f {
+            background: var(--color-bg-warning);
+            color: var(--color-text-warning);
+        }
+
+        .badge-p {
+            background: var(--color-bg-danger);
+            color: var(--color-text-danger);
+        }
+
+        .metric-value {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-desc {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .gauge {
+            width: 100%;
+            height: 6px;
+            background: var(--color-bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .gauge-e {
+            background: #28a745;
+        }
+
+        .gauge-g {
+            background: #378add;
+        }
+
+        .gauge-f {
+            background: #ffc107;
+        }
+
+        .gauge-p {
+            background: #dc3545;
+        }
+
+        .category-section {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .category-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+
+        .score-row:last-child {
+            border-bottom: none;
+        }
+
+        .score-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .score-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .insights-section {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .insights-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-text-primary);
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .score-banner {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .tabs {
+                gap: 0;
+                margin: -2rem -1.5rem 1.5rem -1.5rem;
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+            }
+        }
+
+        .insight-list {
+            list-style: none;
+        }
+
+        .insight-list li {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.75rem;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .insight-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .insight-list.concerns li:before {
+            content: "⚠";
+            color: #ffc107;
+        }
+
+        .no-results {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .sample-data {
+            background: var(--color-bg-secondary);
+            border-left: 4px solid #378add;
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .sample-data strong {
+            color: var(--color-text-primary);
+        }
+
+        .guide-card {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .guide-card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--color-text-primary);
+        }
+
+        .guide-card p {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--color-border-tertiary);
+            text-align: center;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .github-link {
+            color: #378add;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .github-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>📊 Stock Fundamental Analyzer</h1>
+            <p class="subtitle">Free comprehensive stock analysis tool | Input metrics to get instant ratings</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('input', event)">Input Metrics</button>
+            <button class="tab-btn" onclick="switchTab('results', event)">Results</button>
+            <button class="tab-btn" onclick="switchTab('guide', event)">Parameter Guide</button>
+        </div>
+
+        <!-- INPUT TAB -->
+        <div id="input" class="tab-content active">
+            <div class="form-section">
+                <h3>Company Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="companyName" placeholder="e.g., TCS, Infosys, Reliance">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Stock Price</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="currentPrice" placeholder="32.0" step="0.1">
+                            <span class="unit-label">₹</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Market Cap</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="marketCap" placeholder="49.4" step="0.1">
+                            <span class="unit-label">Cr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Valuation Metrics</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>P/E Ratio</label>
+                        <input type="number" id="pe" placeholder="15" step="0.01">
+                        <div class="help-text">Lower = Better. Typical: 15-25</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Book Value</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="bookValue" placeholder="39.4" step="0.1">
+                            <span class="unit-label">₹</span>
+                        </div>
+                        <div class="help-text">Asset value per share</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Dividend Yield %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="dividend" placeholder="2.5" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Annual dividend return</div>
+                    </div>
+                    <div class="form-group">
+                        <label>EPS (Earnings Per Share)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="eps" placeholder="11.3" step="0.01">
+                            <span class="unit-label">₹</span>
+                        </div>
+                        <div class="help-text">Profit per share</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Profitability Metrics</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>ROE %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="roe" placeholder="25.9" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Return on Equity</div>
+                    </div>
+                    <div class="form-group">
+                        <label>ROCE %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="roce" placeholder="20.5" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Return on Capital</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Operating Margin %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="opMargin" placeholder="15" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Operational efficiency</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Net Profit Margin %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="netMargin" placeholder="12" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Bottom line profit %</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Growth Metrics</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Revenue Growth %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="revGrowth" placeholder="21.4" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Annual YoY growth</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Profit Growth %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="profitGrowth" placeholder="15" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Annual earnings growth</div>
+                    </div>
+                    <div class="form-group">
+                        <label>3-Year Sales CAGR %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="cagr3y" placeholder="46" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Compound annual growth</div>
+                    </div>
+                    <div class="form-group">
+                        <label>5-Year Sales CAGR %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="cagr5y" placeholder="27" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Long-term growth rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Financial Health</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Debt-to-Equity Ratio</label>
+                        <input type="number" id="debtToEq" placeholder="0.12" step="0.01">
+                        <div class="help-text">Lower = Safer</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Ratio</label>
+                        <input type="number" id="currentRatio" placeholder="2.0" step="0.1">
+                        <div class="help-text">Liquidity ratio</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Reserves / Cash</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="reserves" placeholder="45.4" step="0.1">
+                            <span class="unit-label">Cr</span>
+                        </div>
+                        <div class="help-text">Available funds</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Promoter Holding %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="promoter" placeholder="33.3" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Founder ownership</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Additional Metrics (Optional)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Profit Variance %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="profitVar" placeholder="63.8" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Profit volatility</div>
+                    </div>
+                    <div class="form-group">
+                        <label>52-Week High</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="high52" placeholder="49.9" step="0.1">
+                            <span class="unit-label">₹</span>
+                        </div>
+                        <div class="help-text">Maximum price</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Pledged Shares %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="pledged" placeholder="0" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Shares as collateral</div>
+                    </div>
+                    <div class="form-group">
+                        <label>ROCE 5-Year Avg %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="roce5y" placeholder="6.12" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                        <div class="help-text">Historical return</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sample-data">
+                <strong>Sample Data:</strong> Try the earlier example - P/E: 2.83, ROE: 25.9%, ROCE: 20.5%, Revenue Growth: 21.4%, D/E: 0.12
+            </div>
+
+            <div class="button-group">
+                <button class="primary" onclick="analyzeStock()">Analyze Stock ↗</button>
+                <button class="secondary" onclick="clearAllFields()">Clear All</button>
+            </div>
+        </div>
+
+        <!-- RESULTS TAB -->
+        <div id="results" class="tab-content">
+            <div id="resultsContent" class="no-results">
+                Run analysis to see results
+            </div>
+        </div>
+
+        <!-- GUIDE TAB -->
+        <div id="guide" class="tab-content">
+            <div class="guide-card">
+                <h4>📊 Understanding Valuation Metrics</h4>
+                <p><strong>P/E Ratio:</strong> Price per rupee of earnings. Lower = Cheaper. 2.83 means ₹2.83 per ₹1 of profit.</p>
+                <p><strong>Book Value:</strong> Asset value per share. P/B of 0.81 means trading below assets.</p>
+                <p><strong>Dividend Yield:</strong> Annual cash return. 0% means all profits reinvested.</p>
+                <p><strong>EPS:</strong> Earnings per share. Higher EPS = Better profitability.</p>
+            </div>
+
+            <div class="guide-card">
+                <h4>💰 Understanding Profitability Metrics</h4>
+                <p><strong>ROE (25.9%):</strong> For every ₹100 of equity, profit is ₹25.90. Top 5% when > 20%.</p>
+                <p><strong>ROCE (20.5%):</strong> Returns on invested capital. > 15% = Excellent efficiency.</p>
+                <p><strong>Margins:</strong> Operating & Net margins show % of revenue as profit.</p>
+            </div>
+
+            <div class="guide-card">
+                <h4>📈 Understanding Growth Metrics</h4>
+                <p><strong>Revenue Growth:</strong> Annual sales increase. 21.4% is 2-4x market average.</p>
+                <p><strong>CAGR:</strong> Compound Annual Growth Rate over 3-5 years. Shows sustained growth.</p>
+                <p><strong>Profit Growth:</strong> Earnings expansion. Should match or exceed revenue growth.</p>
+            </div>
+
+            <div class="guide-card">
+                <h4>🏦 Understanding Financial Health</h4>
+                <p><strong>Debt-to-Equity:</strong> Leverage level. 0.12 = Virtually debt-free. < 1.0 is safe.</p>
+                <p><strong>Current Ratio:</strong> Short-term liquidity. > 1.5 means healthy cash position.</p>
+                <p><strong>Reserves:</strong> Cash/savings accumulated. More = Better flexibility.</p>
+            </div>
+
+            <div class="guide-card">
+                <h4>🎯 Investment Ratings</h4>
+                <p><strong>STRONG BUY (75+):</strong> Exceptional opportunity with strong fundamentals.</p>
+                <p><strong>BUY (60-74):</strong> Good company with attractive metrics.</p>
+                <p><strong>HOLD (45-59):</strong> Mixed signals, wait for clarity.</p>
+                <p><strong>WEAK SELL (30-44):</strong> Concerning metrics, limited upside.</p>
+                <p><strong>SELL (0-29):</strong> Poor fundamentals, high risk.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Stock Fundamental Analyzer | Free tool for educational purposes</p>
+        <p>Built with ❤️ | <a href="https://github.com" class="github-link">View on GitHub</a></p>
+    </footer>
+
+    <script>
+        function switchTab(tabName, event) {
+            event.preventDefault();
+            
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function analyzeStock() {
+            const companyName = document.getElementById('companyName').value || 'Stock';
+            
+            const metrics = {
+                currentPrice: parseFloat(document.getElementById('currentPrice').value),
+                marketCap: parseFloat(document.getElementById('marketCap').value),
+                pe: parseFloat(document.getElementById('pe').value),
+                bookValue: parseFloat(document.getElementById('bookValue').value),
+                dividend: parseFloat(document.getElementById('dividend').value),
+                eps: parseFloat(document.getElementById('eps').value),
+                roe: parseFloat(document.getElementById('roe').value),
+                roce: parseFloat(document.getElementById('roce').value),
+                roce5y: parseFloat(document.getElementById('roce5y').value),
+                opMargin: parseFloat(document.getElementById('opMargin').value),
+                netMargin: parseFloat(document.getElementById('netMargin').value),
+                revGrowth: parseFloat(document.getElementById('revGrowth').value),
+                profitGrowth: parseFloat(document.getElementById('profitGrowth').value),
+                cagr3y: parseFloat(document.getElementById('cagr3y').value),
+                cagr5y: parseFloat(document.getElementById('cagr5y').value),
+                debtToEq: parseFloat(document.getElementById('debtToEq').value),
+                currentRatio: parseFloat(document.getElementById('currentRatio').value),
+                reserves: parseFloat(document.getElementById('reserves').value),
+                promoter: parseFloat(document.getElementById('promoter').value),
+                profitVar: parseFloat(document.getElementById('profitVar').value),
+                high52: parseFloat(document.getElementById('high52').value),
+                pledged: parseFloat(document.getElementById('pledged').value)
+            };
+
+            const scores = calculateScores(metrics);
+            const overall = Math.round((scores.valuation + scores.profitability + scores.growth + scores.health) / 4);
+            const rating = getRating(overall);
+            
+            displayResults(companyName, metrics, scores, overall, rating);
+            
+            document.querySelectorAll('.tab-btn')[1].click();
+        }
+
+        function calculateScores(m) {
+            let val = 0, prof = 0, growth = 0, health = 0;
+
+            // Valuation
+            if (!isNaN(m.pe) && m.pe <= 20) val += 30;
+            else if (m.pe <= 25) val += 20;
+            else if (m.pe <= 35) val += 10;
+            
+            if (!isNaN(m.bookValue) && m.currentPrice) {
+                const pb = m.currentPrice / m.bookValue;
+                if (pb <= 2) val += 25;
+                else if (pb <= 3) val += 15;
+                else if (pb <= 4) val += 8;
+            }
+            
+            if (!isNaN(m.dividend) && m.dividend > 2) val += 20;
+            else if (m.dividend > 0) val += 10;
+            val = Math.min(100, val);
+
+            // Profitability
+            if (!isNaN(m.roe) && m.roe > 20) prof += 35;
+            else if (m.roe > 15) prof += 25;
+            else if (m.roe > 10) prof += 15;
+            
+            if (!isNaN(m.roce) && m.roce > 20) prof += 35;
+            else if (m.roce > 15) prof += 25;
+            else if (m.roce > 10) prof += 15;
+            
+            if (!isNaN(m.opMargin) && m.opMargin > 15) prof += 15;
+            else if (m.opMargin > 10) prof += 10;
+            prof = Math.min(100, prof);
+
+            // Growth
+            if (!isNaN(m.revGrowth) && m.revGrowth > 20) growth += 30;
+            else if (m.revGrowth > 10) growth += 20;
+            else if (m.revGrowth > 5) growth += 10;
+            
+            if (!isNaN(m.profitGrowth) && m.profitGrowth > 15) growth += 30;
+            else if (m.profitGrowth > 8) growth += 20;
+            
+            if (!isNaN(m.cagr5y) && m.cagr5y > 15) growth += 20;
+            else if (m.cagr5y > 10) growth += 15;
+            growth = Math.min(100, growth);
+
+            // Health
+            if (!isNaN(m.debtToEq) && m.debtToEq < 0.5) health += 35;
+            else if (m.debtToEq < 1) health += 20;
+            
+            if (!isNaN(m.currentRatio) && m.currentRatio > 1.5) health += 30;
+            else if (m.currentRatio > 1) health += 15;
+            
+            if (!isNaN(m.pledged) && m.pledged === 0) health += 20;
+            else if (m.pledged < 10) health += 10;
+            health = Math.min(100, health);
+
+            return { valuation: val, profitability: prof, growth, health };
+        }
+
+        function getRating(score) {
+            if (score >= 75) return { text: 'STRONG BUY', class: 'score-excellent' };
+            if (score >= 60) return { text: 'BUY', class: 'score-good' };
+            if (score >= 45) return { text: 'HOLD', class: 'score-fair' };
+            if (score >= 30) return { text: 'WEAK SELL', class: 'score-fair' };
+            return { text: 'SELL', class: 'score-poor' };
+        }
+
+        function getBadgeClass(score) {
+            if (score >= 75) return 'e';
+            if (score >= 60) return 'g';
+            if (score >= 45) return 'f';
+            return 'p';
+        }
+
+        function getGaugeClass(score) {
+            if (score >= 75) return 'e';
+            if (score >= 60) return 'g';
+            if (score >= 45) return 'f';
+            return 'p';
+        }
+
+        function createMetricCard(title, value, desc, score) {
+            const badge = getBadgeClass(score);
+            const badgeText = badge === 'e' ? 'EXC' : badge === 'g' ? 'GOOD' : badge === 'f' ? 'FAIR' : 'POOR';
+            const gauge = getGaugeClass(score);
+            
+            return `
+                <div class="metric-card">
+                    <div class="metric-title">
+                        <span>${title}</span>
+                        <span class="metric-badge badge-${badge}">${badgeText}</span>
+                    </div>
+                    <div class="metric-value">${value}</div>
+                    <div class="metric-desc">${desc}</div>
+                    <div class="gauge"><div class="gauge-fill gauge-${gauge}" style="width: ${Math.min(100, (score || 0))}%;"></div></div>
+                </div>
+            `;
+        }
+
+        function displayResults(company, m, scores, overall, rating) {
+            const pb = m.currentPrice && m.bookValue ? (m.currentPrice / m.bookValue).toFixed(2) : 'N/A';
+            const priceDown = m.high52 && m.currentPrice ? (((m.high52 - m.currentPrice) / m.high52) * 100).toFixed(1) : 'N/A';
+            
+            let strengthsList = [];
+            let concernsList = [];
+            
+            if (scores.valuation > 70) strengthsList.push('Attractive valuation');
+            if (scores.profitability > 70) strengthsList.push('Excellent profitability');
+            if (scores.growth > 70) strengthsList.push('Strong growth');
+            if (scores.health > 70) strengthsList.push('Solid financial health');
+            if (!m.pledged || m.pledged === 0) strengthsList.push('No promoter distress');
+            
+            if (m.roce5y && m.roce > 15 && m.roce5y < 8) concernsList.push('Verify recent turnaround sustainability');
+            if (m.profitVar && m.profitVar > 60) concernsList.push('Monitor profit volatility');
+            if (!m.dividend || m.dividend === 0) concernsList.push('No dividend currently');
+            if (m.marketCap && m.marketCap < 100) concernsList.push('Small cap liquidity risk');
+            
+            const html = `
+                <div class="score-banner">
+                    <div class="score-circle ${rating.class}">${overall}</div>
+                    <div class="banner-text">
+                        <h2>${company}</h2>
+                        <p>Market Cap: ₹${m.marketCap || 'N/A'} Cr | Price: ₹${m.currentPrice || 'N/A'}</p>
+                    </div>
+                    <div class="recommendation-badge badge-${rating.text.toLowerCase().replace(/ /g, '-')}">${rating.text}</div>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-title">Score Breakdown</div>
+                    <div class="score-row">
+                        <span class="score-label">Valuation</span>
+                        <span class="score-value">${Math.round(scores.valuation)}/100</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">Profitability</span>
+                        <span class="score-value">${Math.round(scores.profitability)}/100</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">Growth</span>
+                        <span class="score-value">${Math.round(scores.growth)}/100</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">Financial Health</span>
+                        <span class="score-value">${Math.round(scores.health)}/100</span>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    ${createMetricCard('P/E Ratio', m.pe?.toFixed(2) || 'N/A', 'Price to Earnings', scores.valuation)}
+                    ${createMetricCard('P/B Ratio', pb, 'Price to Book', scores.valuation)}
+                    ${createMetricCard('ROE', (m.roe?.toFixed(1) || 'N/A') + '%', 'Return on Equity', scores.profitability)}
+                    ${createMetricCard('ROCE', (m.roce?.toFixed(1) || 'N/A') + '%', 'Return on Capital', scores.profitability)}
+                    ${createMetricCard('Revenue Growth', (m.revGrowth?.toFixed(1) || 'N/A') + '%', 'Annual YoY Growth', scores.growth)}
+                    ${createMetricCard('5Y CAGR', (m.cagr5y?.toFixed(1) || 'N/A') + '%', 'Long-term Growth', scores.growth)}
+                    ${createMetricCard('D/E Ratio', m.debtToEq?.toFixed(2) || 'N/A', 'Debt to Equity', scores.health)}
+                    ${createMetricCard('Promoter', (m.promoter?.toFixed(1) || 'N/A') + '%', 'Founder Ownership', scores.health)}
+                </div>
+
+                <div class="insights-section">
+                    <div class="insights-title">Key Insights</div>
+                    <div class="insights-grid">
+                        <div>
+                            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 0.75rem; color: #28a745;">Strengths</h4>
+                            <ul class="insight-list">
+                                ${strengthsList.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 0.75rem; color: #ffc107;">Concerns</h4>
+                            <ul class="insight-list concerns">
+                                ${concernsList.map(c => `<li>${c}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function clearAllFields() {
+            document.querySelectorAll('input').forEach(el => el.value = '');
+        }
+    </script>
+</body>
+</html>
