@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analyzer - Image Upload & Auto Import</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #ffffff;
+            --color-bg-secondary: #f8f8f8;
+            --color-bg-tertiary: #f0f0f0;
+            --color-bg-success: #d4edda;
+            --color-bg-info: #d1ecf1;
+            --color-bg-warning: #fff3cd;
+            --color-bg-danger: #f8d7da;
+            
+            --color-text-primary: #1a1a1a;
+            --color-text-secondary: #666666;
+            --color-text-tertiary: #999999;
+            --color-text-success: #155724;
+            --color-text-info: #0c5460;
+            --color-text-warning: #856404;
+            --color-text-danger: #721c24;
+            
+            --color-border-tertiary: rgba(0, 0, 0, 0.15);
+            --color-border-secondary: rgba(0, 0, 0, 0.3);
+            --color-border-primary: rgba(0, 0, 0, 0.4);
+            
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-bg-primary: #1a1a1a;
+                --color-bg-secondary: #2d2d2d;
+                --color-bg-tertiary: #3d3d3d;
+                --color-bg-success: #1e4620;
+                --color-bg-info: #0a3d52;
+                --color-bg-warning: #5f4a1e;
+                --color-bg-danger: #5a2329;
+                
+                --color-text-primary: #ffffff;
+                --color-text-secondary: #b0b0b0;
+                --color-text-tertiary: #808080;
+                --color-text-success: #90ee90;
+                --color-text-info: #87ceeb;
+                --color-text-warning: #ffd700;
+                --color-text-danger: #ff9999;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--color-bg-tertiary);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            background: var(--color-bg-primary);
+            border-bottom: 1px solid var(--color-border-tertiary);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-bg-primary);
+            padding: 1rem 1.5rem;
+            margin: -2rem -1.5rem 2rem -1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--color-text-primary);
+            border-bottom-color: #378add;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--color-border-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--color-bg-secondary);
+        }
+
+        .upload-area:hover {
+            border-color: #378add;
+            background: var(--color-bg-tertiary);
+        }
+
+        .upload-area.dragover {
+            border-color: #378add;
+            background: var(--color-bg-tertiary);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 1rem;
+        }
+
+        .upload-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-desc {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .upload-hint {
+            font-size: 11px;
+            color: var(--color-text-tertiary);
+            margin-top: 1rem;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .preview-container {
+            margin-top: 2rem;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--border-radius-lg);
+            margin-bottom: 1rem;
+        }
+
+        .extraction-status {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .extraction-progress {
+            width: 100%;
+            height: 6px;
+            background: var(--color-bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .extraction-progress-bar {
+            height: 100%;
+            background: #378add;
+            transition: width 0.3s;
+        }
+
+        .extracted-text {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"] {
+            padding-right: 35px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #378add;
+            background: var(--color-bg-primary);
+        }
+
+        .unit-label {
+            position: absolute;
+            right: 12px;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            pointer-events: none;
+            font-weight: 600;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: var(--color-text-tertiary);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 2rem;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--color-bg-tertiary);
+        }
+
+        button.primary {
+            background: #378add;
+            color: white;
+            border-color: #378add;
+            flex: 2;
+        }
+
+        button.primary:hover {
+            background: #2668c5;
+        }
+
+        button.secondary {
+            flex: 1;
+        }
+
+        .results-container {
+            margin-top: 2rem;
+        }
+
+        .score-banner {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 2rem;
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .score-excellent {
+            background: #28a745;
+        }
+
+        .score-good {
+            background: #378add;
+        }
+
+        .score-fair {
+            background: #ffc107;
+            color: var(--color-text-primary);
+        }
+
+        .score-poor {
+            background: #dc3545;
+        }
+
+        .banner-text h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--color-text-primary);
+        }
+
+        .banner-text p {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+
+        .recommendation-badge {
+            padding: 12px 20px;
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            color: white;
+        }
+
+        .badge-strong-buy {
+            background: #28a745;
+        }
+
+        .badge-buy {
+            background: #378add;
+        }
+
+        .badge-hold {
+            background: #ffc107;
+            color: var(--color-text-primary);
+        }
+
+        .badge-weak-sell {
+            background: #ff9800;
+        }
+
+        .badge-sell {
+            background: #dc3545;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.25rem;
+        }
+
+        .metric-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-badge {
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .badge-e {
+            background: var(--color-bg-success);
+            color: var(--color-text-success);
+        }
+
+        .badge-g {
+            background: var(--color-bg-info);
+            color: var(--color-text-info);
+        }
+
+        .badge-f {
+            background: var(--color-bg-warning);
+            color: var(--color-text-warning);
+        }
+
+        .badge-p {
+            background: var(--color-bg-danger);
+            color: var(--color-text-danger);
+        }
+
+        .metric-value {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-desc {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .gauge {
+            width: 100%;
+            height: 6px;
+            background: var(--color-bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .gauge-e {
+            background: #28a745;
+        }
+
+        .gauge-g {
+            background: #378add;
+        }
+
+        .gauge-f {
+            background: #ffc107;
+        }
+
+        .gauge-p {
+            background: #dc3545;
+        }
+
+        .category-section {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .category-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+
+        .score-row:last-child {
+            border-bottom: none;
+        }
+
+        .score-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .score-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .insights-section {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .insights-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-text-primary);
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .score-banner {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .tabs {
+                gap: 0;
+                margin: -2rem -1.5rem 1.5rem -1.5rem;
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+            }
+        }
+
+        .insight-list {
+            list-style: none;
+        }
+
+        .insight-list li {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.75rem;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .insight-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .insight-list.concerns li:before {
+            content: "⚠";
+            color: #ffc107;
+        }
+
+        .no-results {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--color-border-tertiary);
+            border-top-color: #378add;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: var(--color-bg-success);
+            color: var(--color-text-success);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-message {
+            background: var(--color-bg-danger);
+            color: var(--color-text-danger);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .metric-mapping {
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 12px;
+        }
+
+        .mapping-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+
+        .mapping-item:last-child {
+            border-bottom: none;
+        }
+
+        .mapping-label {
+            color: var(--color-text-secondary);
+            font-weight: 600;
+        }
+
+        .mapping-value {
+            color: var(--color-text-primary);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--color-border-tertiary);
+            text-align: center;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>📊 Stock Analyzer - Image Import</h1>
+            <p class="subtitle">Upload a screenshot of stock metrics and auto-import data | OCR-powered extraction</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('upload', event)">Upload Image</button>
+            <button class="tab-btn" onclick="switchTab('input', event)">Manual Input</button>
+            <button class="tab-btn" onclick="switchTab('results', event)">Results</button>
+            <button class="tab-btn" onclick="switchTab('guide', event)">Help</button>
+        </div>
+
+        <!-- UPLOAD TAB -->
+        <div id="upload" class="tab-content active">
+            <div class="form-section">
+                <h3>📸 Upload Stock Data Image</h3>
+                <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.5rem;">
+                    Take a screenshot of your stock metrics table or financial data and upload it here. 
+                    Our AI will automatically extract all numbers and fill in the metrics.
+                </p>
+
+                <div class="upload-area" id="uploadArea" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('imageInput').click()">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-title">Click to upload or drag & drop</div>
+                    <div class="upload-desc">Supported formats: JPG, PNG, GIF, WebP (Max 5MB)</div>
+                    <div class="upload-hint">Works best with clear, high-contrast images of financial data</div>
+                    <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+                </div>
+
+                <div id="previewContainer" class="preview-container" style="display: none;">
+                    <img id="previewImage" class="preview-image" alt="Preview">
+                    
+                    <div id="extractionStatus" class="extraction-status">
+                        <div><span class="loading-spinner"></span>Extracting data from image...</div>
+                        <div class="extraction-progress">
+                            <div id="progressBar" class="extraction-progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div id="extractedTextContainer" style="display: none;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Extracted Text (Raw OCR):</label>
+                        <div id="extractedText" class="extracted-text"></div>
+                    </div>
+
+                    <div id="mappingContainer" style="display: none;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Auto-Detected Values:</label>
+                        <div id="mappingDisplay" class="metric-mapping"></div>
+                    </div>
+
+                    <div class="button-group" id="actionButtons" style="display: none;">
+                        <button class="primary" onclick="importExtractedData()">Import Data ↗</button>
+                        <button class="secondary" onclick="resetUpload()">Upload New Image</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>💡 Tips for Best Results</h3>
+                <ul style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.8; margin-left: 1.5rem;">
+                    <li>Use clear, well-lit screenshots</li>
+                    <li>Ensure text is readable (not blurry)</li>
+                    <li>Include metric names and values</li>
+                    <li>Avoid complex backgrounds</li>
+                    <li>Works with tables, spreadsheets, web pages</li>
+                    <li>Values will be auto-matched to fields below</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MANUAL INPUT TAB -->
+        <div id="input" class="tab-content">
+            <div class="form-section">
+                <h3>Company Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="companyName" placeholder="e.g., TCS, Infosys">
+                    </div>
+                    <div class="form-group">
+                        <label>Current Stock Price</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="currentPrice" placeholder="32.0" step="0.1">
+                            <span class="unit-label">₹</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Market Cap</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="marketCap" placeholder="49.4" step="0.1">
+                            <span class="unit-label">Cr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Valuation Metrics</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>P/E Ratio</label>
+                        <input type="number" id="pe" placeholder="15" step="0.01">
+                        <div class="help-text">Lower = Better. Typical: 15-25</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Book Value</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="bookValue" placeholder="39.4" step="0.1">
+                            <span class="unit-label">₹</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Dividend Yield %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="dividend" placeholder="2.5" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>EPS</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="eps" placeholder="11.3" step="0.01">
+                            <span class="unit-label">₹</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Profitability Metrics</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>ROE %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="roe" placeholder="25.9" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>ROCE %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="roce" placeholder="20.5" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Operating Margin %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="opMargin" placeholder="15" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Net Profit Margin %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="netMargin" placeholder="12" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Growth Metrics</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Revenue Growth %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="revGrowth" placeholder="21.4" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Profit Growth %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="profitGrowth" placeholder="15" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>3-Year Sales CAGR %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="cagr3y" placeholder="46" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>5-Year Sales CAGR %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="cagr5y" placeholder="27" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Financial Health</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Debt-to-Equity Ratio</label>
+                        <input type="number" id="debtToEq" placeholder="0.12" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Current Ratio</label>
+                        <input type="number" id="currentRatio" placeholder="2.0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Reserves / Cash</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="reserves" placeholder="45.4" step="0.1">
+                            <span class="unit-label">Cr</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Promoter Holding %</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="promoter" placeholder="33.3" step="0.1">
+                            <span class="unit-label">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="primary" onclick="analyzeStock()">Analyze Stock ↗</button>
+                <button class="secondary" onclick="clearAllFields()">Clear All</button>
+            </div>
+        </div>
+
+        <!-- RESULTS TAB -->
+        <div id="results" class="tab-content">
+            <div id="resultsContent" class="no-results">
+                Run analysis to see results
+            </div>
+        </div>
+
+        <!-- GUIDE TAB -->
+        <div id="guide" class="tab-content">
+            <div class="form-section">
+                <h3>📸 How Image Import Works</h3>
+                <p style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.8;">
+                    <strong>Step 1:</strong> Upload a screenshot of stock metrics (table, webpage, etc.)<br>
+                    <strong>Step 2:</strong> AI extracts text using OCR (Optical Character Recognition)<br>
+                    <strong>Step 3:</strong> Numbers are matched to financial metrics automatically<br>
+                    <strong>Step 4:</strong> Review extracted values and import to form<br>
+                    <strong>Step 5:</strong> Click Analyze for instant results<br><br>
+                    <strong>Works with:</strong> NSE/BSE apps, Yahoo Finance, Excel spreadsheets, PDFs (screenshots), financial websites
+                </p>
+            </div>
+
+            <div class="form-section">
+                <h3>📊 Supported Metrics</h3>
+                <div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.8;">
+                    <p><strong>Valuation:</strong> P/E, Book Value, Dividend, EPS</p>
+                    <p><strong>Profitability:</strong> ROE, ROCE, Margins</p>
+                    <p><strong>Growth:</strong> Revenue, Profit, CAGR</p>
+                    <p><strong>Health:</strong> D/E, Liquidity, Reserves, Ownership</p>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>⚠️ Tips for Better Accuracy</h3>
+                <ul style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.8; margin-left: 1.5rem;">
+                    <li>Use high-resolution images</li>
+                    <li>Ensure good lighting (avoid shadows)</li>
+                    <li>Avoid skewed/rotated images</li>
+                    <li>Include metric names alongside values</li>
+                    <li>Separate numbers with spaces for clarity</li>
+                    <li>Works best with printed/digital text (not handwritten)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Stock Analyzer with Image Import | OCR-powered automatic data extraction</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <script>
+        let currentExtractedText = '';
+
+        function switchTab(tabName, event) {
+            event.preventDefault();
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById('uploadArea').classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processImage(files[0]);
+            }
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processImage(file);
+            }
+        }
+
+        function processImage(file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File is too large. Maximum 5MB allowed.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                document.getElementById('previewImage').src = imageData;
+                document.getElementById('previewContainer').style.display = 'block';
+                document.getElementById('extractionStatus').style.display = 'block';
+                document.getElementById('extractedTextContainer').style.display = 'none';
+                document.getElementById('mappingContainer').style.display = 'none';
+                document.getElementById('actionButtons').style.display = 'none';
+
+                extractTextFromImage(imageData);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function extractTextFromImage(imageData) {
+            try {
+                const { data: { text } } = await Tesseract.recognize(imageData, 'eng', {
+                    logger: m => {
+                        if (m.status === 'recognizing') {
+                            const progress = Math.round(m.progress * 100);
+                            document.getElementById('progressBar').style.width = progress + '%';
+                        }
+                    }
+                });
+
+                currentExtractedText = text;
+                displayExtraction(text);
+            } catch (error) {
+                console.error('OCR Error:', error);
+                document.getElementById('extractionStatus').innerHTML = 
+                    '<div class="error-message">Error extracting text. Please try another image.</div>';
+            }
+        }
+
+        function displayExtraction(text) {
+            document.getElementById('extractedText').textContent = text;
+            document.getElementById('extractedTextContainer').style.display = 'block';
+
+            const metrics = extractMetricsFromText(text);
+            displayMappings(metrics);
+
+            document.getElementById('mappingContainer').style.display = 'block';
+            document.getElementById('actionButtons').style.display = 'flex';
+            document.getElementById('extractionStatus').style.display = 'none';
+        }
+
+        function extractMetricsFromText(text) {
+            const metrics = {};
+            
+            // Common metric patterns
+            const patterns = {
+                'pe': /P[\/\s]*E\s*[Rr]atio\s*[:=]?\s*([\d.]+)/i,
+                'companyName': /^(.+?)(?:\n|$)/,
+                'roe': /ROE\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'roce': /ROCE\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'bookValue': /[Bb]ook\s*[Vv]alue\s*[:=]?\s*([\d.]+)/i,
+                'dividend': /[Dd]ividend.*?[:=]?\s*([\d.]+)\s*%?/i,
+                'eps': /EPS\s*[:=]?\s*([\d.]+)/i,
+                'opMargin': /[Oo]perating\s*[Mm]argin\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'netMargin': /[Nn]et\s*[Pp]rofit\s*[Mm]argin\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'revGrowth': /[Rr]evenue\s*[Gg]rowth\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'profitGrowth': /[Pp]rofit\s*[Gg]rowth\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'cagr3y': /3.*?[Yy]ear.*?CAGR\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'cagr5y': /5.*?[Yy]ear.*?CAGR\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'debtToEq': /[Dd]ebt.*?[Ee]quity\s*[:=]?\s*([\d.]+)/i,
+                'currentRatio': /[Cc]urrent\s*[Rr]atio\s*[:=]?\s*([\d.]+)/i,
+                'reserves': /[Rr]eserves?\s*[:=]?\s*([\d.]+)/i,
+                'promoter': /[Pp]romoter\s*[:=]?\s*([\d.]+)\s*%?/i,
+                'currentPrice': /[Pp]rice\s*[:=]?\s*([\d.]+)/i,
+                'marketCap': /[Mm]arket\s*[Cc]ap\s*[:=]?\s*([\d.]+)/i
+            };
+
+            for (const [key, pattern] of Object.entries(patterns)) {
+                const match = text.match(pattern);
+                if (match && match[1]) {
+                    metrics[key] = match[1];
+                }
+            }
+
+            return metrics;
+        }
+
+        function displayMappings(metrics) {
+            let html = '';
+            const displayNames = {
+                'companyName': 'Company Name',
+                'pe': 'P/E Ratio',
+                'roe': 'ROE %',
+                'roce': 'ROCE %',
+                'bookValue': 'Book Value',
+                'dividend': 'Dividend Yield',
+                'eps': 'EPS',
+                'opMargin': 'Operating Margin',
+                'netMargin': 'Net Margin',
+                'revGrowth': 'Revenue Growth',
+                'profitGrowth': 'Profit Growth',
+                'cagr3y': '3Y CAGR',
+                'cagr5y': '5Y CAGR',
+                'debtToEq': 'D/E Ratio',
+                'currentRatio': 'Current Ratio',
+                'reserves': 'Reserves',
+                'promoter': 'Promoter Hold',
+                'currentPrice': 'Current Price',
+                'marketCap': 'Market Cap'
+            };
+
+            for (const [key, value] of Object.entries(metrics)) {
+                if (displayNames[key]) {
+                    html += `
+                        <div class="mapping-item">
+                            <span class="mapping-label">${displayNames[key]}:</span>
+                            <span class="mapping-value">${value}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            document.getElementById('mappingDisplay').innerHTML = html || '<p style="color: var(--color-text-secondary);">No metrics detected. Please check image quality.</p>';
+            window.extractedMetrics = metrics;
+        }
+
+        function importExtractedData() {
+            if (!window.extractedMetrics) return;
+
+            const fieldMapping = {
+                'companyName': 'companyName',
+                'pe': 'pe',
+                'roe': 'roe',
+                'roce': 'roce',
+                'bookValue': 'bookValue',
+                'dividend': 'dividend',
+                'eps': 'eps',
+                'opMargin': 'opMargin',
+                'netMargin': 'netMargin',
+                'revGrowth': 'revGrowth',
+                'profitGrowth': 'profitGrowth',
+                'cagr3y': 'cagr3y',
+                'cagr5y': 'cagr5y',
+                'debtToEq': 'debtToEq',
+                'currentRatio': 'currentRatio',
+                'reserves': 'reserves',
+                'promoter': 'promoter',
+                'currentPrice': 'currentPrice',
+                'marketCap': 'marketCap'
+            };
+
+            for (const [source, target] of Object.entries(fieldMapping)) {
+                const element = document.getElementById(target);
+                if (element && window.extractedMetrics[source]) {
+                    element.value = window.extractedMetrics[source];
+                }
+            }
+
+            // Switch to input tab
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('input').classList.add('active');
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+
+            // Show success message
+            const formSection = document.querySelector('.form-section');
+            const successMsg = document.createElement('div');
+            successMsg.className = 'success-message';
+            successMsg.innerHTML = '✓ Data imported successfully! Review and adjust values as needed, then click Analyze Stock.';
+            formSection.parentNode.insertBefore(successMsg, formSection);
+            setTimeout(() => successMsg.remove(), 5000);
+        }
+
+        function resetUpload() {
+            document.getElementById('imageInput').value = '';
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('uploadArea').classList.remove('dragover');
+            window.extractedMetrics = null;
+            currentExtractedText = '';
+        }
+
+        function analyzeStock() {
+            const companyName = document.getElementById('companyName').value || 'Stock';
+            
+            const metrics = {
+                currentPrice: parseFloat(document.getElementById('currentPrice').value),
+                marketCap: parseFloat(document.getElementById('marketCap').value),
+                pe: parseFloat(document.getElementById('pe').value),
+                bookValue: parseFloat(document.getElementById('bookValue').value),
+                dividend: parseFloat(document.getElementById('dividend').value),
+                eps: parseFloat(document.getElementById('eps').value),
+                roe: parseFloat(document.getElementById('roe').value),
+                roce: parseFloat(document.getElementById('roce').value),
+                opMargin: parseFloat(document.getElementById('opMargin').value),
+                netMargin: parseFloat(document.getElementById('netMargin').value),
+                revGrowth: parseFloat(document.getElementById('revGrowth').value),
+                profitGrowth: parseFloat(document.getElementById('profitGrowth').value),
+                cagr3y: parseFloat(document.getElementById('cagr3y').value),
+                cagr5y: parseFloat(document.getElementById('cagr5y').value),
+                debtToEq: parseFloat(document.getElementById('debtToEq').value),
+                currentRatio: parseFloat(document.getElementById('currentRatio').value),
+                reserves: parseFloat(document.getElementById('reserves').value),
+                promoter: parseFloat(document.getElementById('promoter').value)
+            };
+
+            const scores = calculateScores(metrics);
+            const overall = Math.round((scores.valuation + scores.profitability + scores.growth + scores.health) / 4);
+            const rating = getRating(overall);
+            
+            displayResults(companyName, metrics, scores, overall, rating);
+            
+            document.querySelectorAll('.tab-btn')[2].click();
+        }
+
+        function calculateScores(m) {
+            let val = 0, prof = 0, growth = 0, health = 0;
+
+            if (!isNaN(m.pe) && m.pe <= 20) val += 30;
+            else if (m.pe <= 25) val += 20;
+            else if (m.pe <= 35) val += 10;
+            
+            if (!isNaN(m.bookValue) && m.currentPrice) {
+                const pb = m.currentPrice / m.bookValue;
+                if (pb <= 2) val += 25;
+                else if (pb <= 3) val += 15;
+                else if (pb <= 4) val += 8;
+            }
+            
+            if (!isNaN(m.dividend) && m.dividend > 2) val += 20;
+            else if (m.dividend > 0) val += 10;
+            val = Math.min(100, val);
+
+            if (!isNaN(m.roe) && m.roe > 20) prof += 35;
+            else if (m.roe > 15) prof += 25;
+            else if (m.roe > 10) prof += 15;
+            
+            if (!isNaN(m.roce) && m.roce > 20) prof += 35;
+            else if (m.roce > 15) prof += 25;
+            else if (m.roce > 10) prof += 15;
+            
+            if (!isNaN(m.opMargin) && m.opMargin > 15) prof += 15;
+            else if (m.opMargin > 10) prof += 10;
+            prof = Math.min(100, prof);
+
+            if (!isNaN(m.revGrowth) && m.revGrowth > 20) growth += 30;
+            else if (m.revGrowth > 10) growth += 20;
+            else if (m.revGrowth > 5) growth += 10;
+            
+            if (!isNaN(m.profitGrowth) && m.profitGrowth > 15) growth += 30;
+            else if (m.profitGrowth > 8) growth += 20;
+            
+            if (!isNaN(m.cagr5y) && m.cagr5y > 15) growth += 20;
+            else if (m.cagr5y > 10) growth += 15;
+            growth = Math.min(100, growth);
+
+            if (!isNaN(m.debtToEq) && m.debtToEq < 0.5) health += 35;
+            else if (m.debtToEq < 1) health += 20;
+            
+            if (!isNaN(m.currentRatio) && m.currentRatio > 1.5) health += 30;
+            else if (m.currentRatio > 1) health += 15;
+            
+            health = Math.min(100, health);
+
+            return { valuation: val, profitability: prof, growth, health };
+        }
+
+        function getRating(score) {
+            if (score >= 75) return { text: 'STRONG BUY', class: 'score-excellent' };
+            if (score >= 60) return { text: 'BUY', class: 'score-good' };
+            if (score >= 45) return { text: 'HOLD', class: 'score-fair' };
+            if (score >= 30) return { text: 'WEAK SELL', class: 'score-fair' };
+            return { text: 'SELL', class: 'score-poor' };
+        }
+
+        function getBadgeClass(score) {
+            if (score >= 75) return 'e';
+            if (score >= 60) return 'g';
+            if (score >= 45) return 'f';
+            return 'p';
+        }
+
+        function createMetricCard(title, value, desc, score) {
+            const badge = getBadgeClass(score);
+            const badgeText = badge === 'e' ? 'EXC' : badge === 'g' ? 'GOOD' : badge === 'f' ? 'FAIR' : 'POOR';
+            const gauge = score >= 75 ? 'e' : score >= 60 ? 'g' : score >= 45 ? 'f' : 'p';
+            
+            return `
+                <div class="metric-card">
+                    <div class="metric-title">
+                        <span>${title}</span>
+                        <span class="metric-badge badge-${badge}">${badgeText}</span>
+                    </div>
+                    <div class="metric-value">${value}</div>
+                    <div class="metric-desc">${desc}</div>
+                    <div class="gauge"><div class="gauge-fill gauge-${gauge}" style="width: ${Math.min(100, (score || 0))}%;"></div></div>
+                </div>
+            `;
+        }
+
+        function displayResults(company, m, scores, overall, rating) {
+            const pb = m.currentPrice && m.bookValue ? (m.currentPrice / m.bookValue).toFixed(2) : 'N/A';
+            
+            let strengthsList = [];
+            let concernsList = [];
+            
+            if (scores.valuation > 70) strengthsList.push('Attractive valuation');
+            if (scores.profitability > 70) strengthsList.push('Excellent profitability');
+            if (scores.growth > 70) strengthsList.push('Strong growth');
+            if (scores.health > 70) strengthsList.push('Solid financial health');
+            
+            const html = `
+                <div class="score-banner">
+                    <div class="score-circle ${rating.class}">${overall}</div>
+                    <div class="banner-text">
+                        <h2>${company}</h2>
+                        <p>Market Cap: ₹${m.marketCap || 'N/A'} Cr | Price: ₹${m.currentPrice || 'N/A'}</p>
+                    </div>
+                    <div class="recommendation-badge badge-${rating.text.toLowerCase().replace(/ /g, '-')}">${rating.text}</div>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-title">Score Breakdown</div>
+                    <div class="score-row">
+                        <span class="score-label">Valuation</span>
+                        <span class="score-value">${Math.round(scores.valuation)}/100</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">Profitability</span>
+                        <span class="score-value">${Math.round(scores.profitability)}/100</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">Growth</span>
+                        <span class="score-value">${Math.round(scores.growth)}/100</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">Financial Health</span>
+                        <span class="score-value">${Math.round(scores.health)}/100</span>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    ${createMetricCard('P/E Ratio', m.pe?.toFixed(2) || 'N/A', 'Price to Earnings', scores.valuation)}
+                    ${createMetricCard('P/B Ratio', pb, 'Price to Book', scores.valuation)}
+                    ${createMetricCard('ROE', (m.roe?.toFixed(1) || 'N/A') + '%', 'Return on Equity', scores.profitability)}
+                    ${createMetricCard('ROCE', (m.roce?.toFixed(1) || 'N/A') + '%', 'Return on Capital', scores.profitability)}
+                    ${createMetricCard('Revenue Growth', (m.revGrowth?.toFixed(1) || 'N/A') + '%', 'Annual YoY', scores.growth)}
+                    ${createMetricCard('5Y CAGR', (m.cagr5y?.toFixed(1) || 'N/A') + '%', 'Long-term Growth', scores.growth)}
+                    ${createMetricCard('D/E Ratio', m.debtToEq?.toFixed(2) || 'N/A', 'Debt to Equity', scores.health)}
+                    ${createMetricCard('Promoter', (m.promoter?.toFixed(1) || 'N/A') + '%', 'Ownership', scores.health)}
+                </div>
+
+                <div class="insights-section">
+                    <div class="insights-title">Key Insights</div>
+                    <div class="insights-grid">
+                        <div>
+                            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 0.75rem; color: #28a745;">Strengths</h4>
+                            <ul class="insight-list">
+                                ${strengthsList.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 0.75rem; color: #ffc107;">Key Points</h4>
+                            <ul class="insight-list concerns">
+                                ${concernsList.map(c => `<li>${c}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function clearAllFields() {
+            document.querySelectorAll('input').forEach(el => el.value = '');
+        }
+    </script>
+</body>
+</html>
